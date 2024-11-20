@@ -613,10 +613,10 @@ def main() :
 
         st.divider()
 
-        st.subheader('개별펀드 포트폴리오 보유 비중')
+        st.subheader('개별펀드 포트폴리오 현황')
         _, bc = st.columns([9.3, 0.7])
         bc.download_button("Get Data", data=df.to_csv().encode('cp949'), file_name="Fund_Portfolio.csv")
-        st.dataframe(df, height=600, use_container_width=True)
+        st.dataframe(df, height=400, use_container_width=True)
         
         st.divider()
 
@@ -627,27 +627,34 @@ def main() :
 
 
         col2.subheader('BM 대비 비중')
-                   
-        temp = wgt_by_sector['ESG1호'] - wgt_by_sector['BM(K)']
-        temp = temp.sort_values(ascending=True)
+        option = col2.selectbox('Funds', fund_list)           
+        if option not in ['6호','7호','인덱스3-3호','인덱스3-4호','인덱스3-5호','인덱스3-6호','인덱스2호']:
+            temp = wgt_by_sector[option] - wgt_by_sector['BM(K)']
+        else:
+            temp = wgt_by_sector[option] - wgt_by_sector['BM(K200)']
         temp = pd.DataFrame(temp, columns=['차이']).reset_index()
-
+        
+        
         chart_temp = alt.Chart(temp).mark_bar().encode(
-            x = alt.X('대분류:N'),
-            y = alt.Y('차이:Q')
-        ).properties(height=390)
+            x = alt.X('차이:Q', axis=alt.Axis(title='BM 대비(%p)', grid=False)),
+            y = alt.Y('대분류:N', axis=alt.Axis(title='섹터', grid=False), sort='-x'),
+            color = alt.Color(
+                        '차이', 
+                        scale=alt.Scale(scheme='blues'),
+                        legend=None
+                    )
+        ).properties(height=330)
         col2.altair_chart(chart_temp, use_container_width=True)
-        option = col2.selectbox('Funds', ('ESG1호', '4-3호'))
 
     with tab2:
-        st.subheader('개별펀드 종목별 수익률 기여도')
+        st.subheader('종목별 수익률 기여도')
         st.dataframe(ctb_df.style.format(precision=2), height=300, use_container_width=True)
 
     
         col1, col2 = st.columns([8, 2])
 
         with col1:
-            st.subheader('개별펀드 업종별 수익률 기여도')
+            st.subheader('업종별 수익률 기여도')
             st.dataframe(ctb_df_sector.style.highlight_max(axis=0, color='#C9E6F0').highlight_min(axis=0, color='#FFE3E3').format(precision=2), height=385, use_container_width=True)
             # st.dataframe(ctb_df_sector.style.background_gradient(axis=None, cmap='YlOrBr').format(precision=2), height=385, use_container_width=True)
             
@@ -655,15 +662,15 @@ def main() :
             st.subheader('Top Funds')
             st.dataframe(rank_ctb_sector, height=425, use_container_width=True)
 
-        temp = rank_ctb_sector.copy()
-        temp = temp.reset_index()
-        color_scale = alt.Scale(scheme='blues')
+        # temp = rank_ctb_sector.copy()
+        # temp = temp.reset_index()
+        # color_scale = alt.Scale(scheme='blues')
         
-        alt_chart = alt.Chart(temp).mark_bar().encode(
-            y = alt.Y('운용사').sort('-x'),
-            x = alt.X('기여도 합(bp)'),
-            color = alt.Color('운용사', scale=color_scale, legend=None)
-        ).properties(height=350)
+        # alt_chart = alt.Chart(temp).mark_bar().encode(
+        #     y = alt.Y('운용사').sort('-x'),
+        #     x = alt.X('기여도 합(bp)'),
+        #     color = alt.Color('운용사', scale=color_scale, legend=None)
+        # ).properties(height=350)
 
 
 if __name__ == '__main__' :
